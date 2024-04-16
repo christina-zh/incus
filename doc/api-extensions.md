@@ -2438,3 +2438,7 @@ This extends `limits.memory.swap` to allow for a total limit in bytes.
 ## `network_bridge_external_create`
 
 This adds the ability for `bridge.external_interfaces` to create a parent interface using a `interface/parent/vlan` syntax.
+
+## `instances_scriptlet_get_instances`
+
+This allows the instance scriptlet to fetch a list of instances given an optional Project or Location filter.
