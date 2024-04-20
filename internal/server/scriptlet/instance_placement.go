@@ -242,6 +242,52 @@ func InstancePlacementRun(ctx context.Context, l logger.Logger, s *state.State, 
 		return rv, nil
 	}
 
+	getInstancesFunc := func(thread *starlark.Thread, b *starlark.Builtin, args starlark.Tuple, kwargs []starlark.Tuple) (starlark.Value, error) {
+		var project string
+		var location string
+
+		err := starlark.UnpackArgs(b.Name(), args, kwargs, "project", &project)
+		if err != nil {
+			return nil, err
+		}
+		err := starlark.UnpackArgs(b.Name(), args, kwargs, "location", &location)
+		if err != nil {
+			return nil, err
+		}
+		instanceList := make([]api.Instance, 0)
+		
+		err = s.DB.Cluster.Transaction(ctx, func(ctx context.Context, tx *db.ClusterTx) error {
+			filter := InstanceFilter{}
+			filter.Project = &project
+			filter.Node = &location
+
+			// Get instances based on Project and/or Location filters.
+			objects, err := GetInstances(ctx, tx.Tx(), filter)
+			if err != nil {
+				return nil, err
+			}
+
+			// Convert the []Instances into []api.Instances.
+			for _, obj := range objects {
+				instance, err := obj.ToAPI(ctx, tx.Tx())
+				if err != nil {
+					return nil, err
+				}
+				instanceList = append(instanceList, instance)
+			}
+			
+		})
+		if err != nil {
+			return nil, err
+		}
+		rv, err := StarlarkMarshal(instanceList)
+		if err != nil {
+			return nil, fmt.Errorf("Marshalling instance resources failed: %w", err)
+		}
+
+		return rv, nil
+	}
+
 	var err error
 	var raftNodes []db.RaftNode
 	err = s.DB.Node.Transaction(ctx, func(ctx context.Context, tx *db.NodeTx) error {
@@ -307,6 +353,7 @@ func InstancePlacementRun(ctx context.Context, l logger.Logger, s *state.State, 
 		"get_cluster_member_resources": starlark.NewBuiltin("get_cluster_member_resources", getClusterMemberResourcesFunc),
 		"get_cluster_member_state":     starlark.NewBuiltin("get_cluster_member_state", getClusterMemberStateFunc),
 		"get_instance_resources":       starlark.NewBuiltin("get_instance_resources", getInstanceResourcesFunc),
+		"get_instances":				starlark.NewBuiltin("get_instances", getInstancesFunc),
 	}
 
 	prog, thread, err := scriptletLoad.InstancePlacementProgram()
