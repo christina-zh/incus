@@ -2442,3 +2442,7 @@ This extends `limits.memory.swap` to allow for a total limit in bytes.
 ## `network_bridge_external_create`
 
 This adds the ability for `bridge.external_interfaces` to create a parent interface using a `interface/parent/vlan` syntax.
+
+## `resources_cpu_flags`
+
+This exposes the CPU flags/extensions in our resources API to check the CPU features.
