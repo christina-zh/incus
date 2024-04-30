@@ -141,6 +141,9 @@ type ResourcesCPUCore struct {
 	// Current frequency
 	// Example: 3500
 	Frequency uint64 `json:"frequency,omitempty" yaml:"frequency,omitempty"`
+
+	// List of flags
+	Flags []string `json:"flags" yaml:"flags"`
 }
 
 // ResourcesCPUThread represents a CPU thread on the system
