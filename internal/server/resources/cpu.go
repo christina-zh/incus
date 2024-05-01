@@ -241,6 +241,9 @@ func GetCPU() (*api.ResourcesCPU, error) {
 		entryName := entry.Name()
 		entryPath := filepath.Join(sysDevicesCPU, entryName)
 
+		// cpu core flag list
+		var flagList []string
+
 		// Skip any non-CPU entry
 		if !sysfsExists(filepath.Join(entryPath, "topology")) {
 			continue
@@ -331,6 +334,11 @@ func GetCPU() (*api.ResourcesCPU, error) {
 						resSocket.Name = value
 						continue
 					}
+
+					if key == "flags" {
+						flagList = strings.SplitN(value, " ", -1)
+						continue
+					}
 				}
 
 				break
@@ -404,6 +412,9 @@ func GetCPU() (*api.ResourcesCPU, error) {
 
 			// Die number
 			resCore.Die = uint64(cpuDie)
+
+			// flag List
+			resCore.Flags = flagList
 
 			// Frequency
 			if sysfsExists(filepath.Join(entryPath, "cpufreq", "scaling_cur_freq")) {
